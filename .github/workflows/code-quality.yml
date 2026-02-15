@@ -31,7 +31,7 @@ jobs:
         run: black --check src/ tests/
 
       - name: Lint with pylint
-        run: pylint src/ --fail-under=8.0
+        run: pylint src/ --fail-under=10.0
         continue-on-error: false
 
       - name: Type check with mypy
