@@ -13,14 +13,24 @@ logger.setLevel(logging.INFO)
 
 
 def get_required_env_var(name: str) -> str:
-    """Fetch a required environment variable or raise a clear error."""
+    """Fetch a required environment variable or raise a clear error.
+
+    Args:
+        name: Environment variable name
+
+    Returns:
+        Environment variable value
+
+    Raises:
+        ValueError: If environment variable is not set
+    """
     value = os.getenv(name)
     if not value:
         raise ValueError(f"{name} environment variable is required but not set")
     return value
 
 
-ses_client = None
+SES_CLIENT = None
 
 
 def sanitize_input(input_str: str) -> str:
@@ -196,9 +206,39 @@ def success_response(message: str) -> dict[str, Any]:
     }
 
 
-def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+def validate_form_data(
+    body: dict[str, Any],
+) -> tuple[bool, str | None, dict[str, str] | None]:
+    """Validate all form input data.
+
+    Args:
+        body: Request body dictionary
+
+    Returns:
+        Tuple of (is_valid, error_message, data_dict)
     """
-    Main Lambda handler for contact form submissions.
+    name = sanitize_input(body.get("name", ""))
+    email = sanitize_input(body.get("email", ""))
+    phone = sanitize_input(body.get("phone", ""))
+    message = sanitize_input(body.get("message", ""))
+
+    if not name or not is_valid_name(name):
+        return False, "Invalid name", None
+
+    if not email or not is_valid_email(email):
+        return False, "Invalid email", None
+
+    if phone and not is_valid_phone(phone):
+        return False, "Invalid phone number", None
+
+    if not message or not is_valid_message(message):
+        return False, "Invalid message (5-5000 characters)", None
+
+    return True, None, {"name": name, "email": email, "phone": phone, "message": message}
+
+
+def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+    """Main Lambda handler for contact form submissions.
 
     Args:
         event: Lambda event containing HTTP request data
@@ -225,14 +265,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     try:
         # Parse request body
         body_str = event.get("body", "{}")
-        try:
-            body = json.loads(body_str)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "Invalid JSON in request body",
-                extra={"requestId": request_id, "error": str(e)},
-            )
-            return error_response(400, "Invalid JSON format")
+        body = json.loads(body_str)
 
         if not isinstance(body, dict):
             logger.warning(
@@ -240,101 +273,80 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             )
             return error_response(400, "Request body must be a JSON object")
 
-        # Extract and sanitize inputs
-        name = sanitize_input(body.get("name", ""))
-        email = sanitize_input(body.get("email", ""))
-        phone = sanitize_input(body.get("phone", ""))
-        message = sanitize_input(body.get("message", ""))
-
-        # Validate inputs
-        if not name or not is_valid_name(name):
+        # Validate form data
+        is_valid, error_msg, form_data = validate_form_data(body)
+        if not is_valid:
             logger.warning(
-                "Invalid name provided",
-                extra={
-                    "requestId": request_id,
-                    "namePreview": name[:20] if name else "",
-                },
+                "Validation failed: %s", error_msg, extra={"requestId": request_id}
             )
-            return error_response(400, "Invalid name")
-
-        if not email or not is_valid_email(email):
-            logger.warning(
-                "Invalid email provided",
-                extra={"requestId": request_id, "email": email[:20] if email else ""},
-            )
-            return error_response(400, "Invalid email")
-
-        if phone and not is_valid_phone(phone):
-            logger.warning(
-                "Invalid phone number provided", extra={"requestId": request_id}
-            )
-            return error_response(400, "Invalid phone number")
-
-        if not message or not is_valid_message(message):
-            logger.warning(
-                "Invalid message provided",
-                extra={
-                    "requestId": request_id,
-                    "messageLength": len(message) if message else 0,
-                },
-            )
-            return error_response(400, "Invalid message (5-5000 characters)")
+            return error_response(400, error_msg)
 
         logger.info(
-            "Validation passed", extra={"requestId": request_id, "email": email}
+            "Validation passed", extra={"requestId": request_id, "email": form_data["email"]}
         )
 
+        # Get configuration
         aws_region = get_required_env_var("AWS_REGION")
         recipient_email = get_required_env_var("RECIPIENT_EMAIL")
 
-        global ses_client
-        if ses_client is None:
-            ses_client = boto3.client("ses", region_name=aws_region)
+        # Initialize SES client
+        global SES_CLIENT
+        if SES_CLIENT is None:
+            SES_CLIENT = boto3.client("ses", region_name=aws_region)
 
         # Prepare email body
+        phone_display = form_data["phone"] if form_data["phone"] else "Not provided"
         email_body = f"""
-Name: {name}
-Email: {email}
-Phone: {phone if phone else 'Not provided'}
+Name: {form_data['name']}
+Email: {form_data['email']}
+Phone: {phone_display}
 
 Message:
-{message}
+{form_data['message']}
         """
 
         # Send email via SES
-        try:
-            ses_client.send_email(
-                Source=recipient_email,
-                Destination={"ToAddresses": [recipient_email]},
-                Message={
-                    "Subject": {"Data": f"New Contact Form Submission from {name}"},
-                    "Body": {"Text": {"Data": email_body}},
-                },
-            )
-            logger.info(
-                "Email sent successfully",
-                extra={"requestId": request_id, "email": email},
-            )
-            return success_response("Thank you! Your message has been sent.")
+        SES_CLIENT.send_email(
+            Source=recipient_email,
+            Destination={"ToAddresses": [recipient_email]},
+            Message={
+                "Subject": {"Data": f"New Contact Form Submission from {form_data['name']}"},
+                "Body": {"Text": {"Data": email_body}},
+            },
+        )
 
-        except ClientError as e:
-            error_code = e.response["Error"]["Code"]
-            logger.error(
-                f"SES error: {error_code}",
-                extra={
-                    "requestId": request_id,
-                    "error": error_code,
-                    "errorMessage": e.response["Error"]["Message"],
-                },
-            )
-            if error_code == "MessageRejected":
-                return error_response(400, "Email address is not verified in SES")
-            return error_response(500, "Failed to send email")
+        logger.info(
+            "Email sent successfully",
+            extra={"requestId": request_id, "email": form_data["email"]},
+        )
+        return success_response("Thank you! Your message has been sent.")
 
-    except Exception as e:
+    except ValueError as e:
         logger.error(
-            f"Unexpected error processing request: {str(e)}",
+            "Configuration error: %s",
+            str(e),
+            extra={"requestId": request_id},
+        )
+        return error_response(500, "Configuration error")
+    except ClientError as e:
+        error_code = e.response["Error"]["Code"]
+        logger.error(
+            "SES error: %s",
+            error_code,
+            extra={
+                "requestId": request_id,
+                "error": error_code,
+                "errorMessage": e.response["Error"]["Message"],
+            },
+        )
+        if error_code == "MessageRejected":
+            return error_response(400, "Email address is not verified in SES")
+        return error_response(500, "Failed to send email")
+    except (json.JSONDecodeError, KeyError) as exc:
+        logger.error(
+            "Error processing request: %s",
+            str(exc),
             extra={"requestId": request_id},
             exc_info=True,
         )
-        return error_response(500, "An unexpected error occurred")
+        return error_response(500, "An error occurred processing your request")

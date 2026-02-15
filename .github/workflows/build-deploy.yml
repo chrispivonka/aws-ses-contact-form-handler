@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         python-version: ["3.14"]
@@ -40,18 +40,13 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
-        form:
-          - name: chrispivonka.com
-            stack-name: contact-form-handler-chrispivonka-com
-            recipient-email: ${{ secrets.CHRISPIVONKA_COM_RECIPIENT_EMAIL }}
-            aws-access-key-id: ${{ secrets.CHRISPIVONKA_COM_AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.CHRISPIVONKA_COM_AWS_SECRET_ACCESS_KEY }}
-            sam-s3-bucket: ${{ secrets.CHRISPIVONKA_COM_SAM_S3_BUCKET }}
+        form: [chrispivonka.com]
     environment:
-      name: production
-      url: https://chrispivonka.com
+      name: ${{ matrix.form }}
+      url: https://${{ matrix.form }}
 
     steps:
       - uses: actions/checkout@v4
@@ -69,15 +64,15 @@ jobs:
       - name: Build SAM application
         run: sam build
 
-      - name: Deploy SAM application - ${{ matrix.form.name }}
+      - name: Deploy SAM application - ${{ matrix.form }}
         run: |
           sam deploy \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --stack-name ${{ matrix.form.stack-name }} \
-            --s3-bucket ${{ matrix.form.sam-s3-bucket }} \
+            --stack-name contact-form-handler-$(echo ${{ matrix.form }} | sed 's/\./-/g') \
+            --s3-bucket ${{ secrets.SAM_S3_BUCKET }} \
             --region us-east-1 \
-            --parameter-overrides RecipientEmailParameter=${{ matrix.form.recipient-email }}
+            --parameter-overrides RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
         env:
-          AWS_ACCESS_KEY_ID: ${{ matrix.form.aws-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ matrix.form.aws-secret-access-key }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
