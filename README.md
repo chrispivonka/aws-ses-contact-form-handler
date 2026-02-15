@@ -1,4 +1,4 @@
-# Contact Form Handler
+# AWS SES Contact Form Handler
 
 An AWS Lambda function for processing contact form submissions using Python 3.14 and AWS SES (Simple Email Service).
 
@@ -15,8 +15,8 @@ An AWS Lambda function for processing contact form submissions using Python 3.14
 
 ```bash
 # Clone the repository
-git clone https://github.com/chrispivonka/chrispivonka.com-contact-form-handler.git
-cd chrispivonka.com-contact-form-handler
+git clone git@github.com:chrispivonka/aws-ses-contact-form-handler.git
+cd aws-ses-contact-form-handler
 
 # Set up development environment
 make install
@@ -136,8 +136,7 @@ Content-Type: application/json
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `SAM_S3_BUCKET`
-- `DEV_RECIPIENT_EMAIL`
-- `PROD_RECIPIENT_EMAIL`
+- `RECIPIENT_EMAIL`
 
 ## Deployment
 
@@ -156,10 +155,18 @@ sam deploy \
 
 ### Automatic Deployment
 
-Push to `main` branch - GitHub Actions will automatically:
-1. Run all tests and quality checks
-2. Build the SAM application
-3. Deploy to production
+Merge to `main` branch - GitHub Actions will automatically run the following workflow chain:
+
+1. **Security Scan** - Runs bandit, ruff security checks, and dependency vulnerability scans
+2. **Tests** - Runs pytest with 100% code coverage requirement
+3. **Code Quality** - Runs black, pylint, mypy, and ruff checks
+4. **Build and Deploy** - Builds SAM application and deploys to production
+
+If any step fails, the pipeline stops and subsequent steps don't run.
+
+### Manual Deployment Trigger
+
+You can manually trigger the Build and Deploy workflow from the GitHub Actions tab without running the full pipeline.
 
 ## License
 

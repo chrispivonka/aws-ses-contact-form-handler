@@ -1,14 +1,15 @@
 name: Code Quality
 
 on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+    branches: [main]
 
 jobs:
   code-quality:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         python-version: ["3.14"]

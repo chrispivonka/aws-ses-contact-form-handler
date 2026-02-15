@@ -1,14 +1,15 @@
 name: Tests
 
 on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+  workflow_run:
+    workflows: [Security Scan]
+    types: [completed]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         python-version: ["3.14"]
