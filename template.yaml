@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: Contact form handler Lambda function
+
+Parameters:
+  RecipientEmailParameter:
+    Type: String
+    Description: Email address to receive contact form submissions
+    Default: your-email@example.com
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.14
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        AWS_REGION: !Ref AWS::Region
+        RECIPIENT_EMAIL: !Sub "${RecipientEmailParameter}"
+
+Resources:
+  ContactFormHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: contact-form-handler
+      CodeUri: src/
+      Handler: handler.lambda_handler
+      Description: Processes contact form submissions
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource: "*"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContactFormApi
+            Path: /contact
+            Method: POST
+      Tags:
+        Environment: Development
+        Project: chrispivonka.com
+
+  ContactFormApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+
+Outputs:
+  ContactFormApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ContactFormApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+
+  ContactFormFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt ContactFormHandlerFunction.Arn

@@ -1,0 +1,34 @@
+[MASTER]
+load-plugins=pylint.extensions.docparams
+max-line-length=88
+jobs=0
+unsafe-load-any-extension=False
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    too-few-public-methods,
+    duplicate-code,
+
+[FORMAT]
+max-line-length=88
+indent-string='    '
+
+[DESIGN]
+max-attributes=7
+max-arguments=5
+
+[VARIABLES]
+ignored-argument-names=_.*
+
+[LOGGING]
+logging-format-style=new
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,id,x,y,z,df,ax,ay,setUp,tearDown
+
+[DOCSTRING]
+accept-no-param-doc=False
+accept-no-raise-doc=False
+accept-no-return-doc=False
+default-docstring-type=google

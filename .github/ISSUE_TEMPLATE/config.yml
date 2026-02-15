@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/chrispivonka/chrispivonka.com-contact-form-handler/discussions
+    about: Ask questions and share ideas
+  - name: Report Security Vulnerability
+    url: https://github.com/chrispivonka/chrispivonka.com-contact-form-handler/security/advisories/new
+    about: Privately report security vulnerabilities
