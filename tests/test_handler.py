@@ -352,7 +352,7 @@ class TestSuccessResponse:
 class TestLambdaHandler:
     """Test Lambda handler integration."""
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_cors_preflight(self, mock_ses, lambda_context):
         """Test CORS preflight request handling."""
         event = {"httpMethod": "OPTIONS"}
@@ -361,7 +361,7 @@ class TestLambdaHandler:
         assert response["headers"]["Access-Control-Allow-Methods"] == "POST, OPTIONS"
         assert response["headers"]["Access-Control-Allow-Headers"] == "Content-Type"
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_success(self, mock_ses, lambda_context):
         """Test successful form submission."""
         mock_ses.send_email.return_value = {"MessageId": "test-id"}
@@ -382,7 +382,7 @@ class TestLambdaHandler:
         assert body["success"] is True
         mock_ses.send_email.assert_called_once()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_success_without_phone(self, mock_ses, lambda_context):
         """Test successful submission without optional phone."""
         mock_ses.send_email.return_value = {"MessageId": "test-id"}
@@ -400,7 +400,7 @@ class TestLambdaHandler:
         assert response["statusCode"] == 200
         mock_ses.send_email.assert_called_once()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_invalid_json(self, mock_ses, lambda_context):
         """Test handler with invalid JSON."""
         event = {"httpMethod": "POST", "body": "invalid json {"}
@@ -411,7 +411,7 @@ class TestLambdaHandler:
         assert "JSON" in body["message"]
         mock_ses.send_email.assert_not_called()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_non_dict_body(self, mock_ses, lambda_context):
         """Test handler with non-dict JSON body."""
         event = {"httpMethod": "POST", "body": json.dumps(["not", "a", "dict"])}
@@ -420,7 +420,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert "JSON object" in body["message"]
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_missing_body(self, mock_ses, lambda_context):
         """Test handler with missing body."""
         event = {"httpMethod": "POST"}
@@ -428,14 +428,14 @@ class TestLambdaHandler:
         assert response["statusCode"] == 400
         mock_ses.send_email.assert_not_called()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_empty_body(self, mock_ses, lambda_context):
         """Test handler with empty body."""
         event = {"httpMethod": "POST", "body": json.dumps({})}
         response = lambda_handler(event, lambda_context)
         assert response["statusCode"] == 400
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_invalid_name(self, mock_ses, lambda_context):
         """Test handler with invalid name."""
         event = {
@@ -450,7 +450,7 @@ class TestLambdaHandler:
         assert "name" in body["message"].lower()
         mock_ses.send_email.assert_not_called()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_invalid_email(self, mock_ses, lambda_context):
         """Test handler with invalid email."""
         event = {
@@ -469,7 +469,7 @@ class TestLambdaHandler:
         assert "email" in body["message"].lower()
         mock_ses.send_email.assert_not_called()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_invalid_phone(self, mock_ses, lambda_context):
         """Test handler with invalid phone."""
         event = {
@@ -488,7 +488,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert "phone" in body["message"].lower()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_invalid_message(self, mock_ses, lambda_context):
         """Test handler with invalid message."""
         event = {
@@ -502,7 +502,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert "message" in body["message"].lower()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_ses_message_rejected(self, mock_ses, lambda_context):
         """Test handler when SES rejects message."""
         error_response_data = {
@@ -527,7 +527,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert "verified" in body["message"].lower()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_ses_other_error(self, mock_ses, lambda_context):
         """Test handler when SES returns other error."""
         error_response_data = {
@@ -552,7 +552,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert body["success"] is False
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_unexpected_exception(self, mock_ses, lambda_context):
         """Test handler with unexpected exception."""
         mock_ses.send_email.side_effect = Exception("Unexpected error")
@@ -572,7 +572,7 @@ class TestLambdaHandler:
         assert body["success"] is False
         assert "unexpected" in body["message"].lower()
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     @patch("src.handler.get_required_env_var")
     def test_handler_missing_env_var(self, mock_get_env, mock_ses, lambda_context):
         """Test handler when required environment variable is missing."""
@@ -594,7 +594,7 @@ class TestLambdaHandler:
         body = json.loads(response["body"])
         assert body["success"] is False
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_html_injection_in_name(self, mock_ses, lambda_context):
         """Test handler sanitizes HTML injection in name."""
         mock_ses.send_email.return_value = {"MessageId": "test-id"}
@@ -615,7 +615,7 @@ class TestLambdaHandler:
         email_body = call_args[1]["Message"]["Body"]["Text"]["Data"]
         assert "<script>" not in email_body
 
-    @patch("src.handler.ses_client")
+    @patch("src.handler.SES_CLIENT")
     def test_handler_calls_ses_with_correct_data(self, mock_ses, lambda_context):
         """Test that handler calls SES with correct data."""
         mock_ses.send_email.return_value = {"MessageId": "test-id"}
@@ -647,7 +647,7 @@ class TestLambdaHandler:
         import src.handler
 
         # Reset the global ses_client to None
-        src.handler.ses_client = None
+        src.handler.SES_CLIENT = None
 
         mock_ses = MagicMock()
         mock_ses.send_email.return_value = {"MessageId": "test-id"}
