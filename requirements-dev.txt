@@ -1,0 +1,12 @@
+-r requirements.txt
+black==23.12.1
+pylint==3.0.3
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+ruff==0.1.11
+mypy==1.7.1
+aws-sam-cli==1.103.0
+moto==4.2.9
+bandit==1.7.5
+pre-commit==3.5.0

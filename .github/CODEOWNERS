@@ -1,0 +1,10 @@
+# Contact Form Handler Code Owners
+
+# Global owners for all code changes
+* @chrispivonka
+
+# Critical files require explicit review
+/template.yaml @chrispivonka
+/.github/workflows/ @chrispivonka
+/src/handler.py @chrispivonka
+/tests/ @chrispivonka

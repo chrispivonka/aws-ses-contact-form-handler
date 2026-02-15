@@ -136,6 +136,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
@@ -205,3 +207,52 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# AWS SAM
+.aws-sam/
+sam-tests/
+build/
+*.yaml.bak
+sam-tests.json
+
+# AWS Credentials and Configuration
+~/.aws/
+.aws/credentials
+.aws/config
+*.pem
+*.key
+*.jks
+
+# IDE Secrets
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets and Keys
+secrets/
+*.gpg
+*.key
+*.pem
+*.pfx
+*.p12
+.ssh/
+id_rsa*
+id_dsa*
+
+# Security reports
+security-report.json
+vulnerability-report.json
+bandit-report.json
+
+# Node (if needed for frontend assets)
+node_modules/
+package-lock.json
+yarn.lock
+dist/
+.next/
