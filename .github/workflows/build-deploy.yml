@@ -40,6 +40,15 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        form:
+          - name: chrispivonka.com
+            stack-name: contact-form-handler-chrispivonka-com
+            recipient-email: ${{ secrets.CHRISPIVONKA_COM_RECIPIENT_EMAIL }}
+            aws-access-key-id: ${{ secrets.CHRISPIVONKA_COM_AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.CHRISPIVONKA_COM_AWS_SECRET_ACCESS_KEY }}
+            sam-s3-bucket: ${{ secrets.CHRISPIVONKA_COM_SAM_S3_BUCKET }}
     environment:
       name: production
       url: https://chrispivonka.com
@@ -60,15 +69,15 @@ jobs:
       - name: Build SAM application
         run: sam build
 
-      - name: Deploy SAM application
+      - name: Deploy SAM application - ${{ matrix.form.name }}
         run: |
           sam deploy \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --stack-name contact-form-handler \
-            --s3-bucket ${{ secrets.SAM_S3_BUCKET }} \
+            --stack-name ${{ matrix.form.stack-name }} \
+            --s3-bucket ${{ matrix.form.sam-s3-bucket }} \
             --region us-east-1 \
-            --parameter-overrides RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
+            --parameter-overrides RecipientEmailParameter=${{ matrix.form.recipient-email }}
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ matrix.form.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ matrix.form.aws-secret-access-key }}
