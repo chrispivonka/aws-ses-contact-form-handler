@@ -2,6 +2,11 @@
 
 An AWS Lambda function for processing contact form submissions using Python 3.14 and AWS SES (Simple Email Service).
 
+[![Tests](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/test.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/test.yml)
+[![Code Quality](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/code-quality.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/code-quality.yml)
+[![Security Scan](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/security-scan.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/security-scan.yml)
+[![Build and Deploy](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/build-deploy.yml)
+
 ## Setup
 
 ### Prerequisites
