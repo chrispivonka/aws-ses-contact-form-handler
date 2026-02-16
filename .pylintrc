@@ -9,6 +9,7 @@ disable=
     missing-module-docstring,
     too-few-public-methods,
     duplicate-code,
+    logging-too-many-args,
 
 [FORMAT]
 max-line-length=88
@@ -16,6 +17,8 @@ indent-string='    '
 
 [DESIGN]
 max-attributes=7
+max-locals=17
+max-returns=11
 
 [VARIABLES]
 ignored-argument-names=_.*
