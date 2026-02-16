@@ -34,12 +34,14 @@ jobs:
           pip install yamllint
 
       - name: Lint YAML files in .github/
-        run: yamllint -d relaxed .github/
+        run: yamllint .github/
 
       - name: Validate JSON files
         run: |
-          find . -name "*.json" -type f ! -path "./node_modules/*" ! -path "./.venv/*" ! -path "./htmlcov/*" | while read file; do
-            python -m json.tool "$file" > /dev/null && echo "✓ $file" || (echo "✗ $file"; exit 1)
+          find . -name "*.json" -type f ! -path "./node_modules/*" \
+            ! -path "./.venv/*" ! -path "./htmlcov/*" | while read file; do
+            python -m json.tool "$file" > /dev/null && echo "✓ $file" || \
+              (echo "✗ $file"; exit 1)
           done
 
       - name: Format check with black
@@ -75,11 +77,14 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests with pytest and coverage
-        run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml \
+            --cov-report=html --cov-report=term-missing
 
       - name: Check coverage threshold
         run: |
-          coverage report --fail-under=100 --skip-empty || (echo "Coverage is below 100%"; exit 1)
+          coverage report --fail-under=100 --skip-empty || \
+            (echo "Coverage is below 100%"; exit 1)
 
       - name: Archive coverage reports
         if: always()

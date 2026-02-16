@@ -269,11 +269,11 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         # Validate form data
         is_valid, error_msg, form_data = validate_form_data(body)
-        if not is_valid:
+        if not is_valid or form_data is None:
             logger.warning(
                 "Validation failed: %s", error_msg, extra={"requestId": request_id}
             )
-            return error_response(400, error_msg)
+            return error_response(400, error_msg or "Validation failed")
 
         logger.info(
             "Validation passed",
@@ -287,9 +287,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         # Initialize SES client
         global SES_CLIENT  # pylint: disable=global-statement
         if SES_CLIENT is None:
-            SES_CLIENT = boto3.client(  # type: ignore[assignment]
-                "ses", region_name=aws_region
-            )
+            SES_CLIENT = boto3.client("ses", region_name=aws_region)
 
         # Prepare email body
         phone_display = form_data["phone"] if form_data["phone"] else "Not provided"
@@ -308,9 +306,7 @@ Message:
             Destination={"ToAddresses": [recipient_email]},
             Message={
                 "Subject": {
-                    "Data": (
-                        f"New Contact Form Submission from {form_data['name']}"
-                    )
+                    "Data": f"New Contact Form Submission from {form_data['name']}"
                 },
                 "Body": {"Text": {"Data": email_body}},
             },

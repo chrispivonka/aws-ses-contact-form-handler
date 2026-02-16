@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: [CI]  # Waits for CI to complete (lint, test, code-quality, security all run in parallel)
+    workflows: [CI]  # Waits for CI to complete
     types: [completed]
     branches: [main]
   workflow_dispatch:
@@ -10,7 +10,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         python-version: ["3.14"]
@@ -40,7 +42,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         form: [chrispivonka.com]
@@ -66,13 +70,16 @@ jobs:
 
       - name: Deploy SAM application - ${{ matrix.form }}
         run: |
+          FORM="${{ matrix.form }}"
+          STACK="contact-form-handler-${FORM//./-}"
           sam deploy \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --stack-name contact-form-handler-$(echo ${{ matrix.form }} | sed 's/\./-/g') \
+            --stack-name "$STACK" \
             --s3-bucket ${{ secrets.SAM_S3_BUCKET }} \
             --region us-east-1 \
-            --parameter-overrides RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
+            --parameter-overrides \
+            RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
