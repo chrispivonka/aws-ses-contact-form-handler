@@ -47,7 +47,7 @@ jobs:
           app-id: ${{ secrets.AUTOMATION_BOT_APP_ID }}
           private-key: ${{ secrets.AUTOMATION_BOT_PRIVATE_KEY }}
 
-      - name: Enable auto-merge for release PR
+      - name: Approve and enable auto-merge for release PR
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
@@ -57,7 +57,12 @@ jobs:
             --json number --jq '.[0].number')
 
           if [ -n "$PR_NUMBER" ]; then
-            echo "Enabling auto-merge for PR #$PR_NUMBER"
+            echo "Approving and enabling auto-merge for PR #$PR_NUMBER"
+
+            # Approve the PR
+            gh pr review $PR_NUMBER --repo ${{ github.repository }} --approve
+
+            # Enable auto-merge
             gh pr merge $PR_NUMBER --repo ${{ github.repository }} \
               --squash --auto --delete-branch
           else
