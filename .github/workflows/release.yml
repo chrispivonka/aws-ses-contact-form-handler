@@ -31,18 +31,46 @@ jobs:
 
       - name: Determine next version
         id: version
-        uses: paulhatch/semantic-version@v5.4.0
-        with:
-          tag_prefix: "v"
-          major_pattern: "BREAKING CHANGE:|feat!|fix!"
-          major_regexp_flags: "gi"
-          minor_pattern: "feat:"
-          minor_regexp_flags: "gi"
-          version_format: "${major}.${minor}.${patch}"
-          bump_each_commit: true
-          bump_each_commit_patch_pattern: "fix:|perf:|docs:|chore:"
-          search_commit_body: true
-          user_format_type: "csv"
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Parse current version
+          CURRENT_VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Get commits since last tag
+          COMMITS=$(git log $LATEST_TAG..HEAD --oneline)
+
+          # Check for breaking changes (major bump)
+          if echo "$COMMITS" | grep -qE "feat!|fix!|BREAKING CHANGE"; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            BUMP_TYPE="major"
+          # Check for features (minor bump)
+          elif echo "$COMMITS" | grep -qE "^[a-f0-9]+ feat:"; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            BUMP_TYPE="minor"
+          # Check for fixes/patches (patch bump)
+          elif echo "$COMMITS" | grep -qE "^[a-f0-9]+ (fix|perf|docs|chore):"; then
+            PATCH=$((PATCH + 1))
+            BUMP_TYPE="patch"
+          else
+            echo "No version bump needed"
+            BUMP_TYPE="none"
+          fi
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "New version: $NEW_VERSION (bump: $BUMP_TYPE)"
+
+          # Set outputs
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "previous_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "changed=$([[ "$BUMP_TYPE" != "none" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
 
       - name: Update version in pyproject.toml
         if: steps.version.outputs.changed == 'true'
@@ -74,12 +102,11 @@ jobs:
           tag_name: "v${{ steps.version.outputs.version }}"
           release_name: "v${{ steps.version.outputs.version }}"
           body: |
-            ## Changes in v${{ steps.version.outputs.version }}
+            ## Release v${{ steps.version.outputs.version }}
 
-            **Version**: ${{ steps.version.outputs.version }}
-            **Previous Version**: ${{ steps.version.outputs.version_tag }}
-            **Commits**: ${{ steps.version.outputs.increment }}
+            **Type**: ${{ steps.version.outputs.bump_type }} version bump
+            **Previous Version**: v${{ steps.version.outputs.previous_version }}
 
-            See the commit history for details.
+            See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.previous_version }}...v${{ steps.version.outputs.version }}) for details.
           draft: false
           prerelease: false
