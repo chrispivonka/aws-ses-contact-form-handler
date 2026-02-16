@@ -12,7 +12,7 @@ Parameters:
 Globals:
   Function:
     Timeout: 30
-    Runtime: python3.14
+    Runtime: python3.13
     Environment:
       Variables:
         LOG_LEVEL: INFO
