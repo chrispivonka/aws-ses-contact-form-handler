@@ -1,8 +1,9 @@
+---
 name: Release
 
 on:
   workflow_run:
-    workflows: [Build and Deploy]
+    workflows: [Deploy]
     types: [completed]
     branches: [main]
 

@@ -30,7 +30,7 @@ def get_required_env_var(name: str) -> str:
     return value
 
 
-SES_CLIENT = None
+SES_CLIENT: Any | None = None
 
 
 def sanitize_input(input_str: str) -> str:
@@ -89,10 +89,7 @@ def is_valid_email(email: str) -> bool:
     if len(email.split("@")[0]) > 64:
         return False
 
-    if "&lt;" in email or "&gt;" in email:
-        return False
-
-    return True
+    return "&lt;" not in email and "&gt;" not in email
 
 
 def is_valid_name(name: str) -> bool:
@@ -139,10 +136,7 @@ def is_valid_phone(phone: str) -> bool:
 
     # Check digit count (E.164 allows 1-15 digits, with some flexibility)
     digits_only = re.sub(r"\D", "", cleaned)
-    if len(digits_only) < 7 or len(digits_only) > 15:
-        return False
-
-    return True
+    return 7 <= len(digits_only) <= 15
 
 
 def is_valid_message(message: str) -> bool:
@@ -159,10 +153,7 @@ def is_valid_message(message: str) -> bool:
 
     if not cleaned or len(cleaned) < 5:
         return False
-    if len(cleaned) > 5000:
-        return False
-
-    return True
+    return len(cleaned) <= 5000
 
 
 def error_response(status_code: int, message: str) -> dict[str, Any]:
@@ -234,7 +225,11 @@ def validate_form_data(
     if not message or not is_valid_message(message):
         return False, "Invalid message (5-5000 characters)", None
 
-    return True, None, {"name": name, "email": email, "phone": phone, "message": message}
+    return (
+        True,
+        None,
+        {"name": name, "email": email, "phone": phone, "message": message},
+    )
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -268,21 +263,21 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         body = json.loads(body_str)
 
         if not isinstance(body, dict):
-            logger.warning(
-                "Request body is not a JSON object", extra={"requestId": request_id}
-            )
-            return error_response(400, "Request body must be a JSON object")
+            msg = "Request body is not a JSON object"
+            logger.warning(msg, extra={"requestId": request_id})
+            return error_response(400, msg)
 
         # Validate form data
         is_valid, error_msg, form_data = validate_form_data(body)
-        if not is_valid:
+        if not is_valid or form_data is None:
             logger.warning(
                 "Validation failed: %s", error_msg, extra={"requestId": request_id}
             )
-            return error_response(400, error_msg)
+            return error_response(400, error_msg or "Validation failed")
 
         logger.info(
-            "Validation passed", extra={"requestId": request_id, "email": form_data["email"]}
+            "Validation passed",
+            extra={"requestId": request_id, "email": form_data["email"]},
         )
 
         # Get configuration
@@ -290,19 +285,19 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         recipient_email = get_required_env_var("RECIPIENT_EMAIL")
 
         # Initialize SES client
-        global SES_CLIENT
+        global SES_CLIENT  # pylint: disable=global-statement
         if SES_CLIENT is None:
             SES_CLIENT = boto3.client("ses", region_name=aws_region)
 
         # Prepare email body
         phone_display = form_data["phone"] if form_data["phone"] else "Not provided"
         email_body = f"""
-Name: {form_data['name']}
-Email: {form_data['email']}
+Name: {form_data["name"]}
+Email: {form_data["email"]}
 Phone: {phone_display}
 
 Message:
-{form_data['message']}
+{form_data["message"]}
         """
 
         # Send email via SES
@@ -310,7 +305,9 @@ Message:
             Source=recipient_email,
             Destination={"ToAddresses": [recipient_email]},
             Message={
-                "Subject": {"Data": f"New Contact Form Submission from {form_data['name']}"},
+                "Subject": {
+                    "Data": f"New Contact Form Submission from {form_data['name']}"
+                },
                 "Body": {"Text": {"Data": email_body}},
             },
         )
@@ -358,7 +355,7 @@ Message:
             exc_info=True,
         )
         return error_response(500, "An error occurred processing your request")
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         logger.error(
             "Unexpected error processing request: %s",
             str(exc),

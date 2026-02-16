@@ -670,3 +670,22 @@ class TestLambdaHandler:
         mock_boto_client.assert_called_once_with("ses", region_name="us-east-1")
         # Verify the client was used to send email
         mock_ses.send_email.assert_called_once()
+
+    @patch("src.handler.SES_CLIENT")
+    def test_handler_key_error(self, mock_ses, lambda_context):
+        """Test handler when a KeyError occurs during processing."""
+        mock_ses.send_email.side_effect = KeyError("missing_key")
+        event = {
+            "httpMethod": "POST",
+            "body": json.dumps(
+                {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "message": "Test message",
+                }
+            ),
+        }
+        response = lambda_handler(event, lambda_context)
+        assert response["statusCode"] == 500
+        body = json.loads(response["body"])
+        assert body["success"] is False
