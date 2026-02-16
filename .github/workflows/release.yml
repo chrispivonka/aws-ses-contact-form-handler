@@ -57,6 +57,6 @@ jobs:
             **Previous Version**: ${{ steps.version.outputs.version_tag }}
             **Commits**: ${{ steps.version.outputs.increment }}
 
-            See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.previous_version }}...v${{ steps.version.outputs.version }}) for details.
+            See the commit history for details.
           draft: false
           prerelease: false
