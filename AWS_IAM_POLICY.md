@@ -4,7 +4,7 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
 
 ## Required IAM Policy
 
-Replace `995772609444` with your actual AWS account ID and `us-east-1` with your region.
+Replace `995772609444` with your actual AWS account ID and `us-west-2` with your region.
 
 ```json
 {
@@ -21,7 +21,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
         "cloudformation:GetTemplate",
         "cloudformation:UpdateStack"
       ],
-      "Resource": "arn:aws:cloudformation:us-east-1:995772609444:stack/contact-form-handler-*"
+      "Resource": "arn:aws:cloudformation:us-west-2:995772609444:stack/contact-form-handler-*"
     },
     {
       "Sid": "CloudFormationTransform",
@@ -29,7 +29,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
       "Action": [
         "cloudformation:CreateChangeSet"
       ],
-      "Resource": "arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31"
+      "Resource": "arn:aws:cloudformation:us-west-2:aws:transform/Serverless-2016-10-31"
     },
     {
       "Sid": "S3Access",
@@ -52,7 +52,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
         "lambda:AddPermission",
         "lambda:RemovePermission"
       ],
-      "Resource": "arn:aws:lambda:us-east-1:995772609444:function/contact-form-handler*"
+      "Resource": "arn:aws:lambda:us-west-2:995772609444:function/contact-form-handler*"
     },
     {
       "Sid": "APIGatewayAccess",
@@ -64,7 +64,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
         "apigateway:PATCH",
         "apigateway:GET"
       ],
-      "Resource": "arn:aws:apigateway:us-east-1::*"
+      "Resource": "arn:aws:apigateway:us-west-2::*"
     },
     {
       "Sid": "IAMRoleAccess",
@@ -91,7 +91,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
         "logs:DeleteLogGroup",
         "logs:DescribeLogGroups"
       ],
-      "Resource": "arn:aws:logs:us-east-1:995772609444:log-group:/aws/lambda/contact-form-handler*"
+      "Resource": "arn:aws:logs:us-west-2:995772609444:log-group:/aws/lambda/contact-form-handler*"
     },
     {
       "Sid": "SESPermissions",
@@ -99,7 +99,7 @@ Replace `995772609444` with your actual AWS account ID and `us-east-1` with your
       "Action": [
         "ses:SendEmail"
       ],
-      "Resource": "arn:aws:ses:us-east-1:995772609444:identity/website-contact@chrispivonka.com"
+      "Resource": "arn:aws:ses:us-west-2:995772609444:identity/website-contact@chrispivonka.com"
     }
   ]
 }
