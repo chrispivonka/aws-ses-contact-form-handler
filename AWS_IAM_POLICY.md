@@ -4,6 +4,8 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
 
 ## Required IAM Policy
 
+Replace `995772609444` with your actual AWS account ID and `us-east-1` with your region.
+
 ```json
 {
   "Version": "2012-10-17",
@@ -17,11 +19,17 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
         "cloudformation:ExecuteChangeSet",
         "cloudformation:DescribeStacks",
         "cloudformation:GetTemplate",
-        "cloudformation:ListStacks",
-        "cloudformation:UpdateStack",
-        "cloudformation:DeleteStack"
+        "cloudformation:UpdateStack"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:cloudformation:us-east-1:995772609444:stack/contact-form-handler-*"
+    },
+    {
+      "Sid": "CloudFormationTransform",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet"
+      ],
+      "Resource": "arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31"
     },
     {
       "Sid": "S3Access",
@@ -31,7 +39,7 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
         "s3:PutObject",
         "s3:GetObjectVersion"
       ],
-      "Resource": "arn:aws:s3:::*/*"
+      "Resource": "arn:aws:s3:::*"
     },
     {
       "Sid": "LambdaAccess",
@@ -41,21 +49,22 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
         "lambda:GetFunction",
-        "lambda:DeleteFunction",
-        "lambda:ListVersionsByFunction",
-        "lambda:PublishVersion",
         "lambda:AddPermission",
         "lambda:RemovePermission"
       ],
-      "Resource": "arn:aws:lambda:*:*:function/contact-form-handler*"
+      "Resource": "arn:aws:lambda:us-east-1:995772609444:function/contact-form-handler*"
     },
     {
       "Sid": "APIGatewayAccess",
       "Effect": "Allow",
       "Action": [
-        "apigateway:*"
+        "apigateway:POST",
+        "apigateway:DELETE",
+        "apigateway:PUT",
+        "apigateway:PATCH",
+        "apigateway:GET"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:apigateway:us-east-1::*"
     },
     {
       "Sid": "IAMRoleAccess",
@@ -70,10 +79,9 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:GetRolePolicy",
-        "iam:ListRolePolicies",
-        "iam:UpdateAssumeRolePolicy"
+        "iam:ListRolePolicies"
       ],
-      "Resource": "arn:aws:iam::*:role/contact-form-handler*"
+      "Resource": "arn:aws:iam::995772609444:role/contact-form-handler*"
     },
     {
       "Sid": "CloudWatchLogs",
@@ -81,17 +89,15 @@ The IAM user `github-aws-ses-contact-form-chrispivonka.com` needs the following 
       "Action": [
         "logs:CreateLogGroup",
         "logs:DeleteLogGroup",
-        "logs:DescribeLogGroups",
-        "logs:FilterLogEvents"
+        "logs:DescribeLogGroups"
       ],
-      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/contact-form-handler*"
+      "Resource": "arn:aws:logs:us-east-1:995772609444:log-group:/aws/lambda/contact-form-handler*"
     },
     {
       "Sid": "SESPermissions",
       "Effect": "Allow",
       "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail"
+        "ses:SendEmail"
       ],
       "Resource": "*"
     }
