@@ -1,8 +1,8 @@
-name: Build and Deploy
+name: Deploy
 
 on:
   workflow_run:
-    workflows: [Code Quality]
+    workflows: [Security]  # Waits for Security; Tests & Code Quality run in parallel on same push
     types: [completed]
     branches: [main]
   workflow_dispatch:

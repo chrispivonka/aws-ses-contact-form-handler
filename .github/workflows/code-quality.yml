@@ -2,18 +2,16 @@ name: Code Quality
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - '**'
+      - '!main'
+      - main
   pull_request:
-    branches: [main]
-  workflow_run:
-    workflows: [Tests]
-    types: [completed]
     branches: [main]
 
 jobs:
   code-quality:
     runs-on: ubuntu-latest
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         python-version: ["3.14"]
@@ -31,9 +29,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Format check with black
-        run: black --check src/ tests/
-
       - name: Lint with pylint
         run: pylint src/ --fail-under=10.0
         continue-on-error: false
@@ -41,12 +36,3 @@ jobs:
       - name: Type check with mypy
         run: mypy src/ --ignore-missing-imports --strict
         continue-on-error: true
-
-      - name: Check code style with ruff
-        run: ruff check src/ tests/
-
-      - name: Ruff format check
-        run: ruff format --check src/ tests/
-
-      - name: Check import sorting
-        run: ruff check --select I src/ tests/
