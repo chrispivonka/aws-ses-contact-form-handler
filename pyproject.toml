@@ -112,9 +112,17 @@ version_toml = [
     "pyproject.toml:project.version",
 ]
 build_command = "pip install build && python -m build"
-commit_version_number = true
 tag_format = "v{version}"
-branch = "main"
+
+[tool.semantic_release.commit_author]
+env = "GIT_COMMIT_AUTHOR"
+default = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.commit_message]
+tag_format = "chore(release): {version}"
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = []
 
 [tool.semantic_release.branches.main]
 match = "main"
