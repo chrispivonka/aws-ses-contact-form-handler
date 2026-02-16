@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import re
-from typing import Any
+from typing import Any, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -30,7 +30,7 @@ def get_required_env_var(name: str) -> str:
     return value
 
 
-SES_CLIENT = None
+SES_CLIENT: Optional[Any] = None
 
 
 def sanitize_input(input_str: str) -> str:

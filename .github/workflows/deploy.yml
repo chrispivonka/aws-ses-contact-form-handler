@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: [Security]  # Waits for Security; Tests & Code Quality run in parallel on same push
+    workflows: [CI]  # Waits for CI to complete (lint, test, code-quality, security all run in parallel)
     types: [completed]
     branches: [main]
   workflow_dispatch:
