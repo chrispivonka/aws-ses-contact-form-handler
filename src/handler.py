@@ -321,6 +321,14 @@ Message:
         )
         return success_response("Thank you! Your message has been sent.")
 
+    except json.JSONDecodeError as exc:
+        logger.error(
+            "Error processing request - invalid JSON: %s",
+            str(exc),
+            extra={"requestId": request_id},
+            exc_info=True,
+        )
+        return error_response(400, "Invalid JSON format")
     except ValueError as e:
         logger.error(
             "Configuration error: %s",
@@ -342,11 +350,19 @@ Message:
         if error_code == "MessageRejected":
             return error_response(400, "Email address is not verified in SES")
         return error_response(500, "Failed to send email")
-    except (json.JSONDecodeError, KeyError) as exc:
+    except KeyError as exc:
         logger.error(
-            "Error processing request: %s",
+            "Error processing request - missing field: %s",
             str(exc),
             extra={"requestId": request_id},
             exc_info=True,
         )
         return error_response(500, "An error occurred processing your request")
+    except Exception as exc:
+        logger.error(
+            "Unexpected error processing request: %s",
+            str(exc),
+            extra={"requestId": request_id},
+            exc_info=True,
+        )
+        return error_response(500, "An unexpected error occurred")
