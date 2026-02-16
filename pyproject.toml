@@ -101,7 +101,7 @@ directory = "htmlcov"
 
 [project]
 name = "aws-ses-contact-form-handler"
-version = "0.0.7"
+version = "1.0.0"
 description = "AWS Lambda function for processing contact form submissions using SES"
 readme = "README.md"
 requires-python = ">=3.14"
