@@ -17,10 +17,17 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
 
     steps:
+      - name: Generate GitHub App token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AUTOMATION_BOT_APP_ID }}
+          private-key: ${{ secrets.AUTOMATION_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.AUTOMATION_BOT_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Determine next version
         id: version
@@ -43,8 +50,8 @@ jobs:
       - name: Commit version bump
         if: steps.version.outputs.changed == 'true'
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "chrispivonka-automation-bot[bot]"
+          git config --global user.email "chrispivonka-automation-bot[bot]@users.noreply.github.com"
           git add pyproject.toml
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]"
           git push origin main
@@ -60,7 +67,7 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTOMATION_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
         with:
           tag_name: "v${{ steps.version.outputs.version }}"
           release_name: "v${{ steps.version.outputs.version }}"
