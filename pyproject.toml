@@ -115,6 +115,5 @@ build_command = "pip install build && python -m build"
 commit_version_number = true
 tag_format = "v{version}"
 
-[[tool.semantic_release.publish]]
-path = "dist"
+[tool.semantic_release.publish]
 type = "github-release"
