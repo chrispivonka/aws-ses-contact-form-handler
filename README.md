@@ -2,10 +2,9 @@
 
 An AWS Lambda function for processing contact form submissions using Python 3.14 and AWS SES (Simple Email Service).
 
-[![Tests](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/test.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/test.yml)
-[![Code Quality](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/code-quality.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/code-quality.yml)
-[![Security Scan](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/security-scan.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/security-scan.yml)
-[![Build and Deploy](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/build-deploy.yml)
+[![CI](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/ci.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/ci.yml)
+[![Deploy](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/deploy.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/deploy.yml)
+[![Release](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/release.yml/badge.svg)](https://github.com/chrispivonka/aws-ses-contact-form-handler/actions/workflows/release.yml)
 
 ## Setup
 
@@ -162,16 +161,26 @@ sam deploy \
 
 Merge to `main` branch - GitHub Actions will automatically run the following workflow chain:
 
-1. **Security Scan** - Runs bandit, ruff security checks, and dependency vulnerability scans
-2. **Tests** - Runs pytest with 100% code coverage requirement
-3. **Code Quality** - Runs black, pylint, mypy, and ruff checks
-4. **Build and Deploy** - Builds SAM application and deploys to production
+1. **CI** - Runs in parallel on all branches:
+   - Lint (YAML, JSON, black, ruff format/imports)
+   - Test (pytest with 100% code coverage)
+   - Code Quality (pylint 10.0/10, mypy strict mode)
+   - Security (bandit, ruff security checks, CodeQL analysis)
+
+2. **Deploy** - Only runs on main after CI passes:
+   - Builds SAM application
+   - Deploys Lambda functions to AWS with CloudFormation
+
+3. **Release** - Only runs on main after Deploy passes:
+   - Creates semantic version tags
+   - Generates changelog
+   - Creates GitHub releases
 
 If any step fails, the pipeline stops and subsequent steps don't run.
 
 ### Manual Deployment Trigger
 
-You can manually trigger the Build and Deploy workflow from the GitHub Actions tab without running the full pipeline.
+You can manually trigger the Deploy workflow from the GitHub Actions tab without running the full CI pipeline.
 
 ## License
 
