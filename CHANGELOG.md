@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.2](https://github.com/chrispivonka/aws-ses-contact-form-handler/compare/v1.1.1...v1.1.2) (2026-02-16)
+
+
+### Bug Fixes
+
+* add CloudWatch Logs role for API Gateway logging ([690e9d7](https://github.com/chrispivonka/aws-ses-contact-form-handler/commit/690e9d741042c5bf0a9d8e8c3eb11e7e51360e02))
+* auto-approve release PRs to satisfy branch protection ([e64ebcc](https://github.com/chrispivonka/aws-ses-contact-form-handler/commit/e64ebcc253f82db5af972f9b0a97d9b760cb66b4))
+* disable API Gateway logging to avoid account settings conflict ([d63eba5](https://github.com/chrispivonka/aws-ses-contact-form-handler/commit/d63eba533ebcb900f99a7d13e4422ce2b40b0dbd))
+
 ## [1.1.1](https://github.com/chrispivonka/aws-ses-contact-form-handler/compare/v1.1.0...v1.1.1) (2026-02-16)
 
 
