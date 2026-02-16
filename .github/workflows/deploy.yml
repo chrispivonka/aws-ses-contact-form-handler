@@ -78,7 +78,7 @@ jobs:
             --no-fail-on-empty-changeset \
             --stack-name "$STACK" \
             --s3-bucket ${{ secrets.SAM_S3_BUCKET }} \
-            --region us-east-1 \
+            --region us-west-2 \
             --parameter-overrides \
             RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
         env:
