@@ -3,45 +3,13 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: [Release]  # Waits for Release to complete
+    workflows: [Release]
     types: [completed]
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
-    strategy:
-      matrix:
-        python-version: ["3.13"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install SAM CLI
-        run: |
-          python -m pip install --upgrade pip
-          pip install aws-sam-cli
-
-      - name: Build SAM application
-        run: sam build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: sam-build
-          path: .aws-sam/build/
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -79,6 +47,7 @@ jobs:
             --stack-name "$STACK" \
             --s3-bucket ${{ secrets.SAM_S3_BUCKET }} \
             --region us-west-2 \
+            --capabilities CAPABILITY_IAM \
             --parameter-overrides \
             RecipientEmailParameter=${{ secrets.RECIPIENT_EMAIL }}
         env:

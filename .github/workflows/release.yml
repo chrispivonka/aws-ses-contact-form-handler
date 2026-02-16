@@ -27,11 +27,12 @@ jobs:
         uses: paulhatch/semantic-version@v5.4.0
         with:
           tag_prefix: "v"
-          major_pattern: "(BREAKING CHANGE:|feat!:|fix!:)"
-          minor_pattern: "(feat:|feature:)"
+          major_pattern: "(BREAKING CHANGE:|!:)"
+          minor_pattern: "(feat:)"
+          patch_pattern: "(fix:|perf:)"
           version_format: "${major}.${minor}.${patch}"
-          bump_each_commit: false
-          search_commit_body: false
+          bump_each_commit: true
+          search_commit_body: true
           user_format_type: "csv"
 
       - name: Create and push tag
@@ -39,8 +40,9 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          NEW_TAG="v${{ steps.version.outputs.version }}"
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
+          git push origin "$NEW_TAG"
 
       - name: Create GitHub Release
         if: steps.version.outputs.changed == 'true'
