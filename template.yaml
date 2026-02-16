@@ -16,7 +16,6 @@ Globals:
     Environment:
       Variables:
         LOG_LEVEL: INFO
-        AWS_REGION: !Ref AWS::Region
         RECIPIENT_EMAIL: !Sub "${RecipientEmailParameter}"
 
 Resources:
